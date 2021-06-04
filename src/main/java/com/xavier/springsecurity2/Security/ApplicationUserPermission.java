@@ -1,5 +1,9 @@
 package com.xavier.springsecurity2.Security;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.Set;
+
 public enum ApplicationUserPermission {
     USER_READ("user:read"),
     USER_WRITE("user:write"),
@@ -15,4 +19,6 @@ public enum ApplicationUserPermission {
     public String getPermission() {
         return permission;
     }
+
+
 }

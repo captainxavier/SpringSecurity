@@ -1,4 +1,4 @@
-package com.xavier.springsecurity2.Utlits;
+package com.xavier.springsecurity2.Utils;
 
 import com.xavier.springsecurity2.models.User;
 
