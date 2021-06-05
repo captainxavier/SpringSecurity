@@ -44,7 +44,9 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginPage("/login").permitAll()
-                .defaultSuccessUrl("/products",true);
+                .defaultSuccessUrl("/products",true)
+                .and()
+                .rememberMe();
     }
 
     @Override
