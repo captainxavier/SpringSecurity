@@ -1,9 +1,13 @@
 package com.xavier.springsecurity2.Security;
 
+import com.xavier.springsecurity2.auth.ApplicationUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,10 +32,12 @@ import static com.xavier.springsecurity2.Security.ApplicationUserRole.*;
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
 
     @Autowired
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService) {
         this.passwordEncoder = passwordEncoder;
+        this.applicationUserService =applicationUserService;
     }
 
     @Override
@@ -50,34 +56,29 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .defaultSuccessUrl("/products",true)
                 .and()
                 .rememberMe().tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
-                .key("securekey");
+                .key("securekey")
+        .and()
+        .logout()
+        .logoutUrl("/logout")
+        .clearAuthentication(true)
+        .invalidateHttpSession(true)
+        .deleteCookies("JSESSIONID","remember-me")
+        .logoutSuccessUrl("/login");
     }
 
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+        auth.authenticationProvider(daoAuthenticationProvider())
+                .userDetailsService(applicationUserService);
+
+    }
+
     @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails xavier = User.builder()
-                .username("xavier")
-                .password(passwordEncoder.encode("password"))
-                .authorities(ADMIN.getGrantedAuthorities())
-                .build();
-
-        UserDetails tom= User.builder()
-                .username("tom")
-                .password(passwordEncoder.encode("password123"))
-                .authorities(USER.getGrantedAuthorities())
-                .build();
-
-        UserDetails asher= User.builder()
-                .username("asher")
-                .password(passwordEncoder.encode("password123"))
-                .authorities(TRAINEE.getGrantedAuthorities())
-                .build();
-
-
-
-        return new InMemoryUserDetailsManager(
-                xavier,tom,asher
-        );
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(applicationUserService);
+        return provider;
     }
 }
