@@ -1,6 +1,7 @@
 package com.xavier.springsecurity2.Security;
 
 import com.xavier.springsecurity2.auth.ApplicationUserService;
+import com.xavier.springsecurity2.jwt.JWTUsernameAndPasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -45,25 +47,15 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
         http
 
                 .csrf().disable()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .addFilter(new JWTUsernameAndPasswordAuthenticationFilter(authenticationManager()))
                 .authorizeRequests()
                 .antMatchers("/","index","/css/*","/js/*").permitAll()
                 .antMatchers("/api/**").hasRole(USER.name())
                 .anyRequest()
-                .authenticated()
-                .and()
-                .formLogin()
-                .loginPage("/login").permitAll()
-                .defaultSuccessUrl("/products",true)
-                .and()
-                .rememberMe().tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
-                .key("securekey")
-        .and()
-        .logout()
-        .logoutUrl("/logout")
-        .clearAuthentication(true)
-        .invalidateHttpSession(true)
-        .deleteCookies("JSESSIONID","remember-me")
-        .logoutSuccessUrl("/login");
+                .authenticated();
     }
 
     @Override
